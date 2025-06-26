@@ -1,68 +1,65 @@
 const express = require("express");
 const app = express();
 const path = require("path");
-const MongoClient = require("mongodb").MongoClient;
+const { MongoClient } = require("mongodb");
+const cors = require("cors");
+app.use(cors());
 
 const PORT = 5050;
-
-// Middleware for parsing JSON and form data
-app.use(express.json()); // <-- ADD THIS for JSON body parsing
-app.use(express.urlencoded({ extended: true }));
-
-app.use(express.static("public"));
-
-// MongoDB connection
 const MONGO_URL = "mongodb://admin:ans123@localhost:27017";
 const client = new MongoClient(MONGO_URL);
 
-// GET all users
-app.get("/getUsers", async (req, res) => {
-    try {
-        await client.connect();
-        console.log("Connected successfully to server");
+// Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
 
-        const db = client.db("apnacollege-db");
-        const data = await db.collection("users").find({}).toArray();
+let db;
 
-        res.send(data);
-    } catch (err) {
+// Connect once at startup
+async function startServer() {
+  try {
+    await client.connect();
+    console.log("Connected to MongoDB");
+    db = client.db("apnacollege-db");
+
+    // Routes
+    app.get("/getUsers", async (req, res) => {
+      try {
+        const users = await db.collection("users").find({}).toArray();
+        res.json(users);
+      } catch (err) {
         console.error("Error fetching users:", err);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
-    } finally {
-        client.close();
-    }
-});
+        res.status(500).json({ success: false, message: "Error fetching users" });
+      }
+    });
 
-// POST new user
-app.post("/addUser", async (req, res) => {
-    const userObj = req.body;
-    console.log("Request body:", userObj);
+    app.post("/addUser", async (req, res) => {
+      const userObj = req.body;
+      console.log("Received user:", userObj);
 
-    try {
-        await client.connect();
-        console.log("Connected successfully to server");
-
-        const db = client.db("apnacollege-db");
-        const data = await db.collection("users").insertOne(userObj);
-
-        console.log("data inserted in DB");
-
+      try {
+        const result = await db.collection("users").insertOne(userObj);
+        console.log("User inserted");
         res.status(201).json({
-            success: true,
-            message: "User added successfully",
-            insertedId: data.insertedId
+          success: true,
+          message: "User added successfully",
+          insertedId: result.insertedId,
         });
-    } catch (err) {
-        console.error("Error inserting data:", err);
-        res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
-        });
-    } finally {
-        client.close();
-    }
-});
+      } catch (err) {
+        console.error("Error inserting user:", err);
+        res.status(500).json({ success: false, message: "Error adding user" });
+      }
+    });
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+
+  } catch (err) {
+    console.error("Failed to connect to DB:", err);
+  }
+}
+
+startServer();
