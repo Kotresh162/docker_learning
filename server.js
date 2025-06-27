@@ -2,18 +2,17 @@ const express = require("express");
 const app = express();
 const path = require("path");
 const { MongoClient } = require("mongodb");
-const cors = require("cors");
-app.use(cors());
 
 const PORT = 5050;
-// const MONGO_URL = "mongodb://admin:ans123@localhost:27017";
 const MONGO_URL = "mongodb://admin:ans123@mongo:27017";
 const client = new MongoClient(MONGO_URL);
 
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static("public"));
+
+// Serve static files
+app.use(express.static(path.join(__dirname, "public")));
 
 let db;
 
@@ -22,9 +21,9 @@ async function startServer() {
   try {
     await client.connect();
     console.log("Connected to MongoDB");
-    db = client.db("-dapnacollegeb");
+    db = client.db("apnacollege-db");
 
-    // Routes
+    // API Routes
     app.get("/getUsers", async (req, res) => {
       try {
         const users = await db.collection("users").find({}).toArray();
@@ -37,11 +36,8 @@ async function startServer() {
 
     app.post("/addUser", async (req, res) => {
       const userObj = req.body;
-      console.log("Received user:", userObj);
-
       try {
         const result = await db.collection("users").insertOne(userObj);
-        console.log("User inserted");
         res.status(201).json({
           success: true,
           message: "User added successfully",
@@ -53,13 +49,16 @@ async function startServer() {
       }
     });
 
-    // Start server
-    app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
+    // Serve index.html for root
+    app.get("/", (req, res) => {
+      res.sendFile(path.join(__dirname, "public", "index.html"));
     });
 
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT}`);
+    });
   } catch (err) {
-    console.error("Failed to connect to DB:", err);
+    console.error("DB Connection Failed:", err);
   }
 }
 
