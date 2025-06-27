@@ -6,7 +6,8 @@ const cors = require("cors");
 app.use(cors());
 
 const PORT = 5050;
-const MONGO_URL = "mongodb://admin:ans123@localhost:27017";
+// const MONGO_URL = "mongodb://admin:ans123@localhost:27017";
+const MONGO_URL = "mongodb://admin:ans123@mongo:27017";
 const client = new MongoClient(MONGO_URL);
 
 // Middlewares
@@ -21,7 +22,7 @@ async function startServer() {
   try {
     await client.connect();
     console.log("Connected to MongoDB");
-    db = client.db("apnacollege-db");
+    db = client.db("-dapnacollegeb");
 
     // Routes
     app.get("/getUsers", async (req, res) => {
