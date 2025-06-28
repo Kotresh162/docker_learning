@@ -2,11 +2,11 @@
 
 This project is a simple web application that allows users to sign up using their email, username, and password. It is built with:
 
-- 🟢 Node.js (Express.js)
-- 🍃 MongoDB
-- 🐳 Docker + Docker Compose
-- AMAZONE EC2
-- 🖥️ Mongo Express
+-  Node.js (Express.js)
+-  MongoDB
+-  Docker + Docker Compose
+-  AMAZONE EC2
+-  Mongo Express
 
 ---
 
@@ -34,3 +34,8 @@ sudo apt update
 sudo apt install -y docker.io docker-compose
 sudo systemctl start docker
 sudo systemctl enable docker
+
+
+
+## link of aws host
+http://56.228.22.107:5050/
